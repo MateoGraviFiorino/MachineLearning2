@@ -6,6 +6,7 @@ def exploratoryDataAnalysis():
     from plotly.subplots import make_subplots
     import plotly.graph_objects as go
 
+
     # Configuración de la aplicación
     st.title("Análisis Exploratorio de Datos")
     st.write("## Introducción:")
@@ -13,7 +14,7 @@ def exploratoryDataAnalysis():
 
     # Cargar el DataFrame
     # Asegúrate de reemplazar 'Student_Performance.csv' con la ruta a tu archivo CSV
-    df = pd.read_csv('Student_Performance.csv')
+    df = pd.read_csv('data/Student_Performance.csv')
 
     # Mostrar las primeras filas del DataFrame
     st.subheader("Primeras filas del DataFrame")
@@ -177,15 +178,90 @@ def exploratoryDataAnalysis():
 
 def training():
     import streamlit as st
-    st.write("# Esta es la pagina de entrenamiento")
-    st.markdown("aslajslj")
+    import pandas as pd
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import train_test_split
+    import numpy as np
+    from keras.models import Sequential
+    from keras.layers import Dense
+    import plotly.graph_objects as go
+
+    st.write("# Página de Entrenamiento")
+    st.write("En esta página se entrena un modelo de red neuronal y se visualizan los resultados.")
+
+    # Supongamos que el DataFrame ya está cargado y preprocesado
+    # Aquí uso un ejemplo ficticio
+    data = pd.read_csv('data/Student_Performance.csv')
+    X = data[['Hours Studied', 'Previous Scores', 'Sample Question Papers Practiced']]
+    y = data['Performance Index']
+
+    # División de datos
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Escalado de características
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # Definir el modelo secuencial
+    model = Sequential()
+    model.add(Dense(X_train.shape[1], activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(1, activation='linear'))
+
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+
+    # Entrenar el modelo
+    history = model.fit(X_train_scaled, y_train, epochs=100, validation_data=(X_test_scaled, y_test), verbose=0)
+
+    # Visualización de resultados del entrenamiento
+    st.write("## Resultados del entrenamiento")
+
+    # Extraer datos de pérdida y MAE
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    mae = history.history['mae']
+    val_mae = history.history['val_mae']
+    epochs = list(range(1, len(loss) + 1))
+
+    # Gráfico de pérdida (Loss)
+    fig_loss = go.Figure()
+    fig_loss.add_trace(go.Scatter(x=epochs, y=loss, mode='lines+markers', name='Training Loss', line=dict(color='blue')))
+    fig_loss.add_trace(go.Scatter(x=epochs, y=val_loss, mode='lines+markers', name='Validation Loss', line=dict(color='orange')))
+    fig_loss.update_layout(
+        title="Pérdida durante el Entrenamiento",
+        xaxis_title="Épocas",
+        yaxis_title="Loss",
+        legend_title="Tipo",
+        height=400
+    )
+    st.plotly_chart(fig_loss, theme="streamlit", use_container_width=True)
+
+    # Gráfico de MAE
+    fig_mae = go.Figure()
+    fig_mae.add_trace(go.Scatter(x=epochs, y=mae, mode='lines+markers', name='Training MAE', line=dict(color='green')))
+    fig_mae.add_trace(go.Scatter(x=epochs, y=val_mae, mode='lines+markers', name='Validation MAE', line=dict(color='red')))
+    fig_mae.update_layout(
+        title="MAE durante el Entrenamiento",
+        xaxis_title="Épocas",
+        yaxis_title="Mean Absolute Error",
+        legend_title="Tipo",
+        height=400
+    )
+    st.plotly_chart(fig_mae, theme="streamlit", use_container_width=True)
+
+    st.write("### Conclusión")
+    st.write("A través de los gráficos, podemos observar cómo evolucionaron las métricas de pérdida y error absoluto durante el entrenamiento y validación.")
+
+# Mantén el resto del código intacto
+
 
 pages_names_to_funcs = {
     "Exploratory Data Analysis": exploratoryDataAnalysis,
     "Training": training
 }
 demo_name = st.sidebar.selectbox(
-    "Choose a page",
+    "Páginas",
     pages_names_to_funcs.keys()
 )
 pages_names_to_funcs[demo_name]()
